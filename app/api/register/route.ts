@@ -1,5 +1,5 @@
 
-import { NextRequest , NextResponse} from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
@@ -11,7 +11,7 @@ const registerSchema = z.object({
     password: z.string().min(6, "Password must be at least 6 charachters"),
 });
 
-export async function POST(request:NextRequest){
+export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
         // Validate input
@@ -26,7 +26,7 @@ export async function POST(request:NextRequest){
 
         if (existingUser) {
             return NextResponse.json(
-                { error: "User with this email already exists"},
+                { error: "User with this email already exists" },
                 { status: 400 }
             );
         }
@@ -54,27 +54,27 @@ export async function POST(request:NextRequest){
             },
         });
 
-            
+
         return NextResponse.json(
             {
                 message: "User created successfully",
                 user,
             },
             { status: 201 }
-        );        
+        );
 
-        
+
     } catch (error) {
         if (error instanceof z.ZodError) {
             return NextResponse.json(
-                {error: error.issues[0].message},
-                {status: 400}
+                { error: error.issues[0].message },
+                { status: 400 }
             );
         }
         console.error("Register error:", error);
         return NextResponse.json(
-            {error: "Something went worng. Please try again"},
-            {status: 500}
+            { error: "Something went worng. Please try again" },
+            { status: 500 }
         );
     }
 }
