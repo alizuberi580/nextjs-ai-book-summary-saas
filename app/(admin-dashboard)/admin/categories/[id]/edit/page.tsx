@@ -1,13 +1,32 @@
-"use client"
-
-import React, { useState } from "react"
-import { useRouter } from "next/navigation"
+"use client";
+import React, { useState, useEffect } from "react"
+import { useRouter, useParams } from "next/navigation"
 import toast from "react-hot-toast"
 
-export default function NewCategoryPage() {
+interface Category {
+    id: number;
+    name: string;
+    slug: string;
+    description: string | null;
+    icon: string | null;
+    displayOrder: number;
+    isActive: boolean;
+    _count?: {
+        books: number;
+    };
+}
+
+export default function EditCategoryPage() {
 
     const router = useRouter();
+    const params = useParams();
+    const categoryId = params.id as string;
+
+    const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+
+    const [category, setCategory] = useState<Category | null>(null);
+
     const [formData, setFormData] = useState({
         name: "",
         description: "",
@@ -17,6 +36,30 @@ export default function NewCategoryPage() {
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        async function fetchCategory() {
+            try {
+                const response = await fetch(`/api/admin/categories/${categoryId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setCategory(data);
+                    setFormData({
+                        name: data.name,
+                        description: data.description || "",
+                        icon: data.icon || "",
+                        displayOrder: data.displayOrder,
+                        isActive: data.isActive,
+                    });
+                }
+                setLoading(false);
+            } catch (error) {
+                console.error("Failed to fetch category", error);
+                setLoading(false);
+            }
+        }
+        fetchCategory();
+    }, [categoryId]);
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -30,15 +73,15 @@ export default function NewCategoryPage() {
         }));
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
 
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true);
         setErrors({});
 
         try {
-            const response = await fetch("/api/admin/categories", {
-                method: "POST",
+            const response = await fetch(`/api/admin/categories/${categoryId}`, {
+                method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -55,26 +98,43 @@ export default function NewCategoryPage() {
                 if (data.errors) {
                     setErrors(data.errors);
                 } else {
-                    setErrors({ general: data.error || "Failed to create category" });
+                    setErrors({ general: data.error || "Failed to update category" });
                 }
                 setSaving(false);
                 return;
             }
-            toast.success("Category created successfully!");
+            toast.success("Category Updated successfully!");
             router.push("/admin/categories")
         } catch (error) {
-            setErrors({ general: "An error occurred whiile createing the category" });
+            setErrors({ general: "An error occurred while updating the category" });
             toast.error("An error occurred while creating the category");
             setSaving(false);
         }
     };
 
 
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-xl">Loading...</div>
+            </div>
+        );
+    }
+
+    if (!category) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-xl">Category not found</div>
+            </div>
+        );
+
+    }
+
     return (
         <div className="max-w-3xl mx-auto">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Add New Category</h1>
-                <p className="text-gray-600 mt-2">Create a new book category</p>
+                <h1 className="text-3xl font-bold text-gray-900">Edit Category</h1>
+                <p className="text-gray-600 mt-2">Update category details</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -137,12 +197,12 @@ export default function NewCategoryPage() {
                                     onChange={handleChange}
                                     placeholder="📚"
                                     maxLength={10}
-                                    className="w-24 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-center text-2xl"
+                                    className="text-gray-900 w-24 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-center text-2xl"
                                 />
                                 {formData.icon && (
                                     <div className="flex items-center space-x-2">
                                         <span className="text-sm text-gray-600">Preview:</span>
-                                        <span className="text-3xl">{formData.icon}</span>
+                                        <span className="text-3xl text-gray-700">{formData.icon}</span>
                                     </div>
                                 )}
 
@@ -200,10 +260,11 @@ export default function NewCategoryPage() {
                         className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg disabled:opacity-50"
                         disabled={saving}
                     >
-                        {saving ? "Creating..." : "Create Category"}
+                        {saving ? "Saving..." : "Save Category"}
                     </button>
                 </div>
             </form>
         </div>
+
     );
 }
