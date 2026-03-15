@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
                     if (book.originalPdfUrl) {
                         sendMessage("Extracting text from PDF...");
                         try {
+                            //Builds the file path → reads the PDF file into a buffer → parses it → extracts raw text.
                             const pdfParse = require("pdf-parse");
                             const pdfPath = join(process.cwd(), "public", book.originalPdfUrl);
                             const dataBuffer = await readFile(pdfPath);
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
                     }
                     sendMessage("Sending to CHAT GPT API...");
 
-                    // GENERATE MAIN SUMMARY FOR THE BOOK 
+                    // GENERATE MAIN SUMMARY FOR THE BOOK Sends the extracted PDF text to GPT-4 asking for a 150-200 word summary, key takeaways, target audience, and themes.
                     const summaryCompletion = await openai.chat.completions.create({
                         model: "gpt-4",
                         messages: [
@@ -110,7 +111,7 @@ Please provide:
                     sendMessage("Generating table of contents...");
 
                     // Generate table of contents 
-
+                    //Asks GPT-4 to generate 8-12 logical chapters as a JSON array with chapterNumber, title, and description.
                     const tocCompletion = await openai.chat.completions.create({
                         model: "gpt-4",
                         messages: [
@@ -132,6 +133,7 @@ Please provide:
                     let tableOfContents = [];
                     try {
                         const tocText = tocCompletion.choices[0].message.content || "[]";
+                        //Parses GPT's JSON string response into a usable JavaScript array.
                         tableOfContents = JSON.parse(tocText);
                     } catch (e) {
                         console.error("Failed to parse toc", e);
@@ -149,8 +151,8 @@ Please provide:
                     const chaptersWithSummaries = [];
                     for (let i = 0; i < tableOfContents.length; i++) {
                         const chapter = tableOfContents[i];
-                        sendMessage(`Generating professional summary for Chapter ${chapter.chapterNumber}: ${chapter.titie}...`);
-
+                        sendMessage(`Generating professional summary for Chapter ${chapter.chapterNumber}: ${chapter.title}...`);
+                        //For each chapter, calls GPT-4 asking for an exact 150-word professional summary specific to that chapter.
                         try {
                             const chapterSummaryCompletion = await openai.chat.completions.create({
                                 model: "gpt-4",
@@ -183,11 +185,11 @@ Return ONLY the 150-word summary text, nothing else.`,
                             });
 
                             const detailedSummary = chapterSummaryCompletion.choices[0].message.content || chapter.description;
+                            //Spreads the existing chapter data and appends the newly generated summary to the results array.
                             chaptersWithSummaries.push({
                                 ...chapter,
                                 detailedSummary: detailedSummary,
                             });
-
                             sendMessage(`Chapter ${chapter.chapterNumber} summary completed`);
                         } catch (error) {
                             console.error(`Error generating summary for chapter ${chapter.chapterNumber}:`, error);
@@ -201,7 +203,7 @@ Return ONLY the 150-word summary text, nothing else.`,
 
                     sendMessage("Saving summary to database...");
 
-                    // save to database 
+                    // save to database, the overall book summary + TOC to the BookSummary table.
                     await prisma.bookSummary.create({
                         data: {
                             bookId: book.id,
