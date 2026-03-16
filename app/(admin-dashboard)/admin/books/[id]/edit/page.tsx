@@ -158,8 +158,9 @@ export default function EditBookPage() {
                 },
                 body: JSON.stringify({ bookId: parseInt(bookId) }),
             });
-
+            //Gets a reader object that lets you read the stream chunk by chunk as data arrives from the server.
             const reader = response.body?.getReader();
+            //Converts incoming raw bytes → JavaScript string, exact reverse of TextEncoder on server
             const decoder = new TextDecoder();
 
             if (reader) {
