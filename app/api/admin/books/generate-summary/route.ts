@@ -37,7 +37,14 @@ export async function POST(request: NextRequest) {
         /*
         Creates a Server-Sent Events (SSE) stream — this lets the frontend receive live progress updates instead of waiting for one big response.
         */
-        const encoder = new TextEncoder();
+        const encoder = new TextEncoder(); //TextEncoder converts JavaScript strings → raw bytes (Uint8Array).
+        /*
+        - creates a stream object with a start method that runs immediately when the stream is created.
+        - is automatically passed in by the browser — it's the control handle that lets you push data into the stream with two key methods:
+
+        - controller.enqueue() — push a chunk of data into the stream
+        - controller.close() — signal that the stream is done
+         */
         const stream = new ReadableStream({
             async start(controller) {
                 /*
@@ -55,11 +62,11 @@ export async function POST(request: NextRequest) {
                     if (book.originalPdfUrl) {
                         sendMessage("Extracting text from PDF...");
                         try {
-                            const pdfParse = require("pdf-parse");
-                            const pdfPath = join(process.cwd(), "public", book.originalPdfUrl);
-                            const dataBuffer = await readFile(pdfPath);
-                            const pdfData = await pdfParse(dataBuffer);
-                            pdfText = pdfData.text;
+                            const pdfParse = require("pdf-parse"); //Dynamically imports the pdf-parse library.
+                            const pdfPath = join(process.cwd(), "public", book.originalPdfUrl); //Constructs the absolute path to the PDF file. process.cwd() is the root of your Next.js project.
+                            const dataBuffer = await readFile(pdfPath); //Reads the PDF file from disk into memory as a raw buffer.
+                            const pdfData = await pdfParse(dataBuffer); //Passes the buffer into pdf-parse which processes it and returns an object.
+                            pdfText = pdfData.text; //Extracts the text property from the parsed PDF data.
 
                             // Limit to first 15000 characters to avoid token limits 
                             if (pdfText.length > 15000) {
@@ -77,6 +84,10 @@ export async function POST(request: NextRequest) {
                     sendMessage("Sending to CHAT GPT API...");
 
                     // GENERATE MAIN SUMMARY FOR THE BOOK 
+                    // Sets GPT's persona and behavior for the entire conversation and then The actual request. Injects the real book data, title, author etc
+                    //Explicitly tells GPT the exact output format you want.
+                    // temprature controls randomness. 0.7 is a good balance between creativity and consistency.
+                    // Caps the response length. 1000 tokens ≈ ~750 words
                     const summaryCompletion = await openai.chat.completions.create({
                         model: "gpt-4",
                         messages: [
@@ -105,7 +116,10 @@ Please provide:
                         temperature: 0.7,
                         max_tokens: 1000,
                     });
-
+                    /*
+                     * GPT returns a choices array (it can return multiple responses if asked). [0] takes the first one, 
+                     * .message.content gets the actual text. || "" guards against it being null. 
+                     */
                     const summaryText = summaryCompletion.choices[0].message.content || "";
                     sendMessage("Generating table of contents...");
 
