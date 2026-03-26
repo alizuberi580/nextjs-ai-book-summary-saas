@@ -71,19 +71,19 @@ export default function AddNewBookPage() {
     const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            setCoverImageFile(file);// store File object in state for later
+            setCoverImageFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
-                setCoverImagePreview(reader.result as string);// base64 data: URL
+                setCoverImagePreview(reader.result as string);
             }
-            reader.readAsDataURL(file);// converts image to base64 string
+            reader.readAsDataURL(file);
         }
     };
 
     const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            setPdfFile(file); // just stores the File, no preview needed
+            setPdfFile(file);
         }
     };
 
@@ -101,12 +101,12 @@ export default function AddNewBookPage() {
 
             if (coverImageFile) {
                 const formData = new FormData();
-                formData.append("file", coverImageFile); // the raw File objec
-                formData.append("type", "cover"); // tells the API which folder to use
+                formData.append("file", coverImageFile);
+                formData.append("type", "cover");
 
                 const uploadResponse = await fetch("/api/admin/upload", {
                     method: "POST",
-                    body: formData, // multipart/form-data — NO Content-Type header needed
+                    body: formData,
                 });
 
                 if (uploadResponse.ok) {
@@ -179,6 +179,118 @@ export default function AddNewBookPage() {
     };
 
 
+    /// Function for generate book summary by chatgpt api
+    const handleGenerateSummary = async () => {
+
+        if (!bookId) {
+            toast.error("Please save the book first before generating summary");
+        }
+
+        setGeneratingSummary(true);
+        setSummaryProgress("Extracting text from PDF...");
+
+        try {
+            const response = await fetch("/api/admin/books/generate-summary", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ bookId }),
+            });
+
+            const reader = response.body?.getReader();
+            const decoder = new TextDecoder();
+
+            if (reader) {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split("\n");
+
+                    for (const line of lines) {
+                        if (line.startsWith("data:")) {
+                            const data = JSON.parse(line.slice(6));
+                            setSummaryProgress(data.message);
+
+                            if (data.completed) {
+                                setGeneratingSummary(false);
+                                toast.success("Summary generated successfully");
+                                // Refreah book data
+                                window.location.reload();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            setGeneratingSummary(false);
+            setSummaryProgress("");
+            toast.error("Failed to generate summary");
+        }
+    };
+
+
+
+    /// Function for generate book summary Audio by chatgpt api 
+
+    const handleGenerateAudio = async () => {
+
+        if (!bookId) {
+            toast.error("Please save the book first before generating summary");
+        }
+
+        setGeneratingAudio(true);
+        setAudioProgress("Generating audio from summary...");
+
+        try {
+            const response = await fetch("/api/admin/books/generate-audio", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ bookId }),
+            });
+
+            const reader = response.body?.getReader();
+            const decoder = new TextDecoder();
+
+            if (reader) {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split("\n");
+
+                    for (const line of lines) {
+                        if (line.startsWith("data:")) {
+                            const data = JSON.parse(line.slice(6));
+                            setAudioProgress(data.message);
+
+                            if (data.completed) {
+                                setGeneratingAudio(false);
+                                toast.success("Audio generated successfully");
+                                // Refreah book data
+                                window.location.reload();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            setGeneratingAudio(false);
+            setAudioProgress("");
+            toast.error("Failed to generate Audio");
+        }
+    };
+
+
+
+
     return (
         <div className="max-w-5xl mx-auto">
             <div className="mb-8">
@@ -200,13 +312,13 @@ export default function AddNewBookPage() {
 
                     {/* Book Information */}
                     <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                        <h2 className="text-xl font-bold text-slate-900 mb-4">
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">
                             📚 Book Information
                         </h2>
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Title *
                                     </label>
                                     <input
@@ -221,7 +333,7 @@ export default function AddNewBookPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Author *
                                     </label>
                                     <input
@@ -237,7 +349,7 @@ export default function AddNewBookPage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-900 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Category *
                                 </label>
                                 <select
@@ -257,7 +369,7 @@ export default function AddNewBookPage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-900 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Description *
                                 </label>
                                 <textarea
@@ -273,7 +385,7 @@ export default function AddNewBookPage() {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Upload Cover Image *
                                     </label>
                                     <input
@@ -292,7 +404,7 @@ export default function AddNewBookPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Upload PDF File *
                                     </label>
                                     <input
@@ -312,7 +424,7 @@ export default function AddNewBookPage() {
 
                             <div className="grid grid-cols-3 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Publication Year
                                     </label>
                                     <input
@@ -328,7 +440,7 @@ export default function AddNewBookPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                         ISBN
                                     </label>
                                     <input
@@ -342,7 +454,7 @@ export default function AddNewBookPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Tags
                                     </label>
                                     <input
@@ -360,7 +472,7 @@ export default function AddNewBookPage() {
 
                     {/* Publishing Options */}
                     <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                        <h2 className="text-xl font-bold text-slate-900 mb-4">
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">
                             🚀 Publishing Options
                         </h2>
                         <div className="space-y-4">
@@ -373,7 +485,7 @@ export default function AddNewBookPage() {
                                     onChange={handleChange}
                                     className="w-4 h-4 text-indigo-600"
                                 />
-                                <label htmlFor="isFeatured" className="text-sm font-medium text-slate-900">
+                                <label htmlFor="isFeatured" className="text-sm font-medium text-gray-700">
                                     Featured Book (Show on homepage)
                                 </label>
                             </div>
@@ -387,7 +499,7 @@ export default function AddNewBookPage() {
                                     onChange={handleChange}
                                     className="w-4 h-4 text-indigo-600"
                                 />
-                                <label htmlFor="isPublished" className="text-sm font-medium text-slate-900">
+                                <label htmlFor="isPublished" className="text-sm font-medium text-gray-700">
                                     Publish Book (Make visible to users)
                                 </label>
                             </div>
@@ -405,7 +517,7 @@ export default function AddNewBookPage() {
                         <button
                             type="button"
                             onClick={() => router.back()}
-                            className="px-6 py-3 border border-gray-300 text-slate-900 rounded-lg font-semibold hover:bg-gray-50"
+                            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50"
                             disabled={loading}
                         >
                             Cancel
@@ -421,58 +533,60 @@ export default function AddNewBookPage() {
                 </form>
 
                 {/* AI Summary Generation */}
+                {bookId && (
+                    <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">
+                            🤖 AI Summary Generation
+                        </h2>
+                        <div className="space-y-4">
+                            <p className="text-gray-600">
+                                Generate AI-powered summary using ChatGPT
+                            </p>
 
-                <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                    <h2 className="text-xl font-bold text-gray-900 mb-4">
-                        🤖 AI Summary Generation
-                    </h2>
-                    <div className="space-y-4">
-                        <p className="text-gray-600">
-                            Generate AI-powered summary using ChatGPT
-                        </p>
+                            {summaryProgress && (
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                    <p className="text-sm text-blue-800">{summaryProgress}</p>
+                                </div>
+                            )}
 
-
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <p className="text-sm text-blue-800">summaryProgress</p>
+                            <button
+                                onClick={handleGenerateSummary}
+                                disabled={generatingSummary}
+                                className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:shadow-lg disabled:opacity-50"
+                            >
+                                {generatingSummary ? "Generating..." : "Generate Summary with ChatGPT"}
+                            </button>
                         </div>
-
-
-                        <button
-
-                            className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:shadow-lg disabled:opacity-50"
-                        >
-                            Generate Summary with ChatGPT
-                        </button>
                     </div>
-                </div>
-
+                )}
 
                 {/* Audio Generation */}
+                {bookId && (
+                    <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">
+                            🎧 Audio Generation
+                        </h2>
+                        <div className="space-y-4">
+                            <p className="text-gray-600">
+                                Generate audio using Text-to-Speech
+                            </p>
 
-                <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                    <h2 className="text-xl font-bold text-gray-900 mb-4">
-                        🎧 Audio Generation
-                    </h2>
-                    <div className="space-y-4">
-                        <p className="text-gray-600">
-                            Generate audio using Text-to-Speech
-                        </p>
+                            {audioProgress && (
+                                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                                    <p className="text-sm text-purple-800">{audioProgress}</p>
+                                </div>
+                            )}
 
-
-                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                            <p className="text-sm text-purple-800">audioProgress</p>
+                            <button
+                                onClick={handleGenerateAudio}
+                                disabled={generatingAudio}
+                                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:shadow-lg disabled:opacity-50"
+                            >
+                                {generatingAudio ? "Generating" : "🎧 Generate Audio"}
+                            </button>
                         </div>
-
-
-                        <button
-
-                            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:shadow-lg disabled:opacity-50"
-                        >
-                            🎧 Generate Audio
-                        </button>
                     </div>
-                </div>
-
+                )}
             </div>
         </div>
     );
