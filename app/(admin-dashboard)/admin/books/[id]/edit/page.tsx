@@ -158,9 +158,8 @@ export default function EditBookPage() {
                 },
                 body: JSON.stringify({ bookId: parseInt(bookId) }),
             });
-            //Gets a reader object that lets you read the stream chunk by chunk as data arrives from the server.
+
             const reader = response.body?.getReader();
-            //Converts incoming raw bytes → JavaScript string, exact reverse of TextEncoder on server
             const decoder = new TextDecoder();
 
             if (reader) {
@@ -196,12 +195,10 @@ export default function EditBookPage() {
 
 
 
-    /// Function for generate book summary Audio by chatgpt api 
-
+    /// Function for generate book summary Audio by chatgpt api
     const handleGenerateAudio = async () => {
         setGeneratingAudio(true);
         setAudioProgress("Generating audio from summary...");
-
         try {
             const response = await fetch("/api/admin/books/generate-audio", {
                 method: "POST",
@@ -243,7 +240,7 @@ export default function EditBookPage() {
             setAudioProgress("");
             toast.error("Failed to generate Audio");
         }
-    };
+    }
 
 
 
@@ -292,7 +289,7 @@ export default function EditBookPage() {
                                         onChange={handleChange}
                                         required
                                         className="text-gray-900 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                        placeholder="Enter bo ok title"
+                                        placeholder="Enter book title"
                                     />
                                 </div>
 
@@ -479,7 +476,7 @@ export default function EditBookPage() {
                                 disabled={generatingSummary}
                                 className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:shadow-lg disabled:opacity-50"
                             >
-                                {generatingSummary ? "Generating..." : book.summaryGenerated ? "Regenerating Summary" : "Generate Summary"}
+                                {generatingSummary ? "Generating..." : book.summaryGenerated ? "Regenerate Summary" : "Generate Summary"}
                             </button>
                         </div>
 
