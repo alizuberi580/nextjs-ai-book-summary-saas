@@ -41,6 +41,10 @@ export default function BooksPage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true)
+  /*
+  - searchParams:  An object representing the current URL's query string (e.g. ?search=harry&page=2)
+  - .get("search"):  Reads the value of the search key from the URL. Returns null if it doesn't exist
+   */
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "");
   const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get("page") || "1"));
@@ -89,7 +93,10 @@ export default function BooksPage() {
     setLoading(true);
 
     try {
-
+      /*
+      - URLSearchParams(...):  A built-in browser class that builds URL query strings like ?page=1&limit=12
+      - the final query looks like --> /api/books?page=1&limit=12&search=harry+potter&category=fiction
+      */
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: "12",
@@ -260,8 +267,8 @@ export default function BooksPage() {
               <button
                 onClick={() => handleCategoryChange("")}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${selectedCategory === ""
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
               >
                 All Categories
@@ -380,8 +387,8 @@ export default function BooksPage() {
                     key={i + 1}
                     onClick={() => setCurrentPage(i + 1)}
                     className={`px-4 py-2 rounded-lg font-medium ${currentPage === i + 1
-                        ? "bg-indigo-600 text-white"
-                        : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      ? "bg-indigo-600 text-white"
+                      : "border border-gray-300 text-gray-700 hover:bg-gray-50"
                       } `}
                   >
                     {i + 1}
