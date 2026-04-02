@@ -125,8 +125,8 @@ export default function UsersPage() {
                 <button
                     onClick={() => setFilter("all")}
                     className={`px-4 py-2 rounded-lg text-sm font-semibold ${filter === "all"
-                            ? "bg-indigo-600 text-white"
-                            : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                        ? "bg-indigo-600 text-white"
+                        : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                         } `}
                 >
                     All Users
@@ -134,8 +134,8 @@ export default function UsersPage() {
                 <button
                     onClick={() => setFilter("premium")}
                     className={`px-4 py-2 rounded-lg text-sm font-semibold ${filter === "premium"
-                            ? "bg-indigo-600 text-white"
-                            : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                        ? "bg-indigo-600 text-white"
+                        : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                         } `}
                 >
                     Premium
@@ -143,8 +143,8 @@ export default function UsersPage() {
                 <button
                     onClick={() => setFilter("free")}
                     className={`px-4 py-2 rounded-lg text-sm font-semibold ${filter === "free"
-                            ? "bg-indigo-600 text-white"
-                            : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                        ? "bg-indigo-600 text-white"
+                        : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                         } `}
                 >
                     Free
@@ -152,8 +152,8 @@ export default function UsersPage() {
                 <button
                     onClick={() => setFilter("admin")}
                     className={`px-4 py-2 rounded-lg text-sm font-semibold ${filter === "admin"
-                            ? "bg-indigo-600 text-white"
-                            : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                        ? "bg-indigo-600 text-white"
+                        : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                         } `}
                 >
                     Admins
@@ -221,8 +221,8 @@ export default function UsersPage() {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span
                                                 className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${user.role === "ADMIN"
-                                                        ? "bg-red-100 text-red-700"
-                                                        : "bg-blue-100 text-blue-700"
+                                                    ? "bg-red-100 text-red-700"
+                                                    : "bg-blue-100 text-blue-700"
                                                     } `}
                                             >
                                                 {user.role}
@@ -255,7 +255,7 @@ export default function UsersPage() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <Link
-                                                href={`/admin/users/id`}
+                                                href={`/admin/users/${user.id}`}
                                                 className="text-indigo-600 hover:text-indigo-900 font-semibold text-sm"
                                             >
                                                 View Details
