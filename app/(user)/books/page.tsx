@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
@@ -35,7 +35,7 @@ interface Category {
 }
 
 
-export default function BooksPage() {
+function BooksPageContent() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -434,5 +434,17 @@ export default function BooksPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function BooksPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-xl text-gray-600">Loading...</div>
+      </div>
+    }>
+      <BooksPageContent />
+    </Suspense>
   );
 }
