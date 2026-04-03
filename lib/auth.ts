@@ -7,7 +7,7 @@ import { UserRole, SubscriptionTier } from "@prisma/client";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     //Connects NextAuth to your Prisma client instance so it can query your users table during login.
-    adapter: PrismaAdapter(prisma), 
+    adapter: PrismaAdapter(prisma) as any,
     session: {//Tells NextAuth to store session data in a JWT cookie instead of the database
         strategy: "jwt",
     },
@@ -19,42 +19,42 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         CredentialsProvider({
             name: "credentials",
             credentials: {
-                email: { label: "Email", type: "email"},
-                password: { label: "Password", type: "password"},
+                email: { label: "Email", type: "email" },
+                password: { label: "Password", type: "password" },
             },
-            async authorize(credentials){//auth the user inputs
+            async authorize(credentials) {//auth the user inputs
                 if (!credentials?.email || !credentials?.password) {
                     throw new Error("Email and password is required");
                 }
-        /// Find user in database 
-        const user = await prisma.user.findUnique({
-            where : {
-                email: credentials.email as string,
+                /// Find user in database 
+                const user = await prisma.user.findUnique({
+                    where: {
+                        email: credentials.email as string,
+                    },
+                });
+
+                if (!user || !user.passwordHash) {
+                    throw new Error("Invalid email or password");
+                }
+                /// Verify password 
+                const isPasswordVaild = await bcrypt.compare(
+                    credentials.password as string,
+                    user.passwordHash
+                );
+
+                if (!isPasswordVaild) {
+                    throw new Error("Invalid email or password");
+                }
+
+                // Return user object 
+                return {
+                    id: user.id,
+                    email: user.email,
+                    name: user.fullName,
+                    role: user.role,
+                    subscriptionTier: user.subscriptionTier
+                };
             },
-        });
-
-        if (!user || !user.passwordHash) {
-            throw new Error("Invalid email or password");
-        }
-        /// Verify password 
-        const isPasswordVaild = await bcrypt.compare(
-            credentials.password as string,
-            user.passwordHash
-        );
-
-        if (!isPasswordVaild) {
-            throw new Error("Invalid email or password");
-        }
-
-        // Return user object 
-        return {
-            id: user.id,
-            email: user.email,
-            name: user.fullName,
-            role: user.role,
-            subscriptionTier: user.subscriptionTier
-             }; 
-           },
         }),
     ],
     callbacks: {//Callbacks are functions NextAuth calls automatically at specific points in the auth flow
@@ -74,5 +74,5 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             }
             return session;
         },
-    } ,
+    },
 });
